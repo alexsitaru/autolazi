@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f3d5e">
+<title>AutoLaZi – Mașina ta, cu actele la zi!</title>
+<meta name="description" content="Alerte pentru RCA, ITP, rovinietă, CASCO, ulei, distribuție și revizie. Pentru familii și firme. Aplicație românească.">
+<link rel="manifest" href="/manifest.webmanifest">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AutoLaZi">
+<style>
+:root{
+  --bg:#f3f5f8; --card:#fff; --ink:#16202a; --mute:#64707d; --line:#e2e6eb;
+  --brand:#0f3d5e; --brand2:#1b6aa0;
+  --exp:#c62828; --exp-bg:#fdecec; --urg:#d9480f; --urg-bg:#fff0e6;
+  --soon:#a87900; --soon-bg:#fff8db; --ok:#2b8a3e; --ok-bg:#e9f7ec; --nd:#64707d; --nd-bg:#eef1f4;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:680px;margin:0 auto;padding:0 14px 160px}
+header{background:var(--brand);color:#fff;padding:14px 16px 16px}
+header .in{max-width:680px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px}
+header h1{font-size:19px;margin:0;letter-spacing:.2px}
+header small{opacity:.8;font-size:12px;display:block}
+.plan-pill{background:rgba(255,255,255,.16);border:0;color:#fff;border-radius:20px;padding:6px 12px;font-size:13px;cursor:pointer}
+h2{font-size:17px;margin:20px 2px 10px}
+.muted{color:var(--mute)}
+.small{font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.stat{border-radius:12px;padding:10px 8px;text-align:center;cursor:pointer;border:2px solid transparent}
+.stat b{display:block;font-size:22px;line-height:1.1}
+.stat span{font-size:12px}
+.stat.on{border-color:currentColor}
+.l-exp{color:var(--exp);background:var(--exp-bg)} .l-urg{color:var(--urg);background:var(--urg-bg)}
+.l-soon{color:var(--soon);background:var(--soon-bg)} .l-ok{color:var(--ok);background:var(--ok-bg)} .l-nd{color:var(--nd);background:var(--nd-bg)}
+.row{display:flex;align-items:center;gap:12px}
+.row .grow,.item .grow{flex:1;min-width:0}
+.item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer}
+.item .t{font-weight:600}
+.item.plan .s{white-space:normal}
+.item .s{font-size:13px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{flex-shrink:0;font-size:12px;font-weight:600;padding:4px 9px;border-radius:20px;white-space:nowrap}
+.plate{display:inline-block;font-weight:700;font-family:ui-monospace,Menlo,Consolas,monospace;border:1.5px solid var(--ink);border-radius:5px;padding:1px 6px;font-size:13px;background:#fff;letter-spacing:.5px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:11px;padding:11px 16px;cursor:pointer;font-weight:600;background:var(--brand2);color:#fff}
+.btn.sec{background:#e7edf3;color:var(--brand)}
+.btn.ghost{background:transparent;color:var(--brand2);padding:8px 10px}
+.btn.danger{background:var(--exp-bg);color:var(--exp)}
+.btn.full{width:100%}
+.btn:disabled{opacity:.5;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.fab{position:fixed;right:18px;bottom:84px;z-index:20;border-radius:30px;padding:14px 20px;box-shadow:0 6px 18px rgba(15,61,94,.3)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);z-index:15;padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs .in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.tabs button{background:none;border:0;padding:9px 4px 10px;font-size:12px;color:var(--mute);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabs button .ic{font-size:19px;line-height:1}
+nav.tabs button.on{color:var(--brand2);font-weight:600}
+label.f{display:block;margin-bottom:12px}
+label.f>span{display:block;font-size:13px;color:var(--mute);margin-bottom:4px}
+input[type=text],input[type=password],input[type=date],input[type=number],input[type=tel],input[type=email],select,textarea{width:100%;border:1px solid #cfd6de;border-radius:10px;padding:10px 11px;background:#fff}
+textarea{min-height:90px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid #cfd6de;background:#fff;border-radius:20px;padding:6px 12px;cursor:pointer;font-size:14px}
+.chip.on{background:var(--brand2);border-color:var(--brand2);color:#fff}
+.empty{text-align:center;padding:36px 16px}
+.empty .big{font-size:40px}
+.note{background:#eaf2fa;border-radius:12px;padding:10px 12px;font-size:13px;color:#24476a;margin:10px 0}
+.warn{background:var(--urg-bg);color:#8a3a08}
+/* sheet */
+.ov{position:fixed;inset:0;background:rgba(10,20,30,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:#fff;width:100%;max-width:680px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom))}
+@media(min-width:700px){.ov{align-items:center}.sheet{border-radius:18px;max-height:86vh}}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sheet-h h3{margin:0;font-size:17px}
+.x{background:#eef1f4;border:0;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px}
+.preview{max-width:100%;max-height:260px;border-radius:10px;display:block;margin:8px auto}
+.wallet{background:linear-gradient(160deg,#0f3d5e,#1b6aa0);color:#fff;border-radius:16px;padding:16px;margin-bottom:12px}
+.wallet .plate{color:var(--ink)}
+.wdoc{background:#fff;border-radius:12px;padding:12px;margin-bottom:8px;border:1px solid var(--line)}
+.toast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);background:#16202a;color:#fff;padding:10px 16px;border-radius:10px;z-index:80;font-size:14px;max-width:90%;text-align:center}
+.msg{white-space:pre-wrap;background:#e7f7ee;border-radius:10px;padding:10px;font-size:14px;margin-top:8px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}
+.kv dt{color:var(--mute)} .kv dd{margin:0}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header><div class="in">
+  <div><h1>🚗 AutoLaZi</h1><small>Mașina ta, cu actele la zi!</small></div>
+  <button class="plan-pill" data-act="tab" data-tab="setari" id="planPill">Plan</button>
+</div></header>
+<div class="wrap" id="app"></div>
+<button class="btn fab" data-act="scan" id="fab">📷 Scanează</button>
+<nav class="tabs"><div class="in">
+  <button data-act="tab" data-tab="termene"><span class="ic">⏰</span>Termene</button>
+  <button data-act="tab" data-tab="vehicule"><span class="ic">🚗</span>Vehicule</button>
+  <button data-act="tab" data-tab="alerte"><span class="ic">🔔</span>Alerte</button>
+  <button data-act="tab" data-tab="setari"><span class="ic">⚙️</span>Setări</button>
+</div></nav>
+<div id="modal"></div>
+
+<script>
+/* ---------- instalare (PWA) ---------- */
+let installPrompt=null;
+function isStandalone(){try{return window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}catch(e){return false}}
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e;try{render()}catch(err){}});
+window.addEventListener("appinstalled",()=>{installPrompt=null;toast("AutoLaZi e pe telefon ✓");try{render()}catch(err){}});
+/* ---------- constante ---------- */
+const HAS_AI = !!(window.claude && window.claude.use);
+const DOC_STD = ["RCA","ITP","Rovinietă","CASCO","Revizie","Schimb ulei + filtre","Kit distribuție","Schimb anvelope"];
+const LUNI = ["ian.","feb.","mar.","apr.","mai","iun.","iul.","aug.","sep.","oct.","nov.","dec."];
+const DOC_BIZ = ["Verificare tahograf","Copie conformă / Licență transport","Atestat profesional șofer","Extinctor","Trusă medicală","Fișă medicală / Aviz psihologic"];
+const PLANS = {
+  free:{name:"Free",price:"gratuit",pm:"0 lei",py:"",sms:false,biz:false,maxV:1,desc:"1 mașină · notificări pe telefon + e-mail · documente standard"},
+  family:{name:"Family",price:"",pm:"5,99 lei/lună",py:"sau 49 lei/an",sms:true,biz:false,maxV:4,desc:"2–4 mașini · telefon + e-mail + SMS de urgență · documente standard"},
+  small:{name:"Small Business",price:"",pm:"49 lei/lună",py:"sau 490 lei/an",sms:true,biz:true,maxV:10,desc:"până la 10 mașini · tahograf, copie conformă, atestate · portofel șofer · SMS de urgență"},
+  business:{name:"Business",price:"",pm:"129 lei/lună",py:"sau 1.290 lei/an",sms:true,biz:true,maxV:999,desc:"peste 10 mașini, nelimitat · tot ce are Small Business"}
+};
+const TYPES = {autoturism:"Autoturism",duba:"Dubă",camion:"Camion"};
+
+/* ---------- stare ---------- */
+let state = blank();
+let ui = {tab:"termene", filter:null, vid:null};
+let storeMode = "loading"; // cloud | local | memory | loading
+let ref = null;
+
+function blank(){return {plan:"business",vehicles:[],settings:{thresholds:[30,14,7,2],smsUrgent:true,contact:"",phone:"",company:""}}}
+function uid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $ = s => document.querySelector(s);
+
+/* ---------- date ---------- */
+function today(){const d=new Date();d.setHours(0,0,0,0);return d}
+function pd(s){if(!s)return null;const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s);if(!m)return null;return new Date(+m[1],+m[2]-1,+m[3])}
+function fmt(s){const d=typeof s==="string"?pd(s):s;if(!d)return"—";return String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+"."+d.getFullYear()}
+function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
+function diffDays(a,b){return Math.round((b-a)/86400000)}
+
+/* ---------- kilometraj estimat ---------- */
+const nf=n=>Math.round(n).toLocaleString("ro-RO");
+function monthLabel(d){const t=today();if(d.getFullYear()===t.getFullYear()&&d.getMonth()===t.getMonth())return"luna asta";return LUNI[d.getMonth()]+(d.getFullYear()!==t.getFullYear()?" "+d.getFullYear():"")}
+function kmInfo(v){
+  const rs=(v.kmReadings||[]).filter(r=>pd(r.date)&&r.km).slice().sort((a,b)=>a.date<b.date?-1:1);
+  const last=rs.length?rs[rs.length-1]:(v.km?{date:v.kmDate||iso(today()),km:Number(v.km)}:null);
+  let rate=Number(v.kmPerMonth)||0,measured=false;
+  if(rs.length>=2){const f=rs[0],dd=diffDays(pd(f.date),pd(last.date));if(dd>=14&&last.km>f.km){rate=(last.km-f.km)/dd*30.4;measured=true}}
+  const est=last?last.km+rate*Math.max(0,diffDays(pd(last.date),today()))/30.4:null;
+  return {last,rate,measured,est};
+}
+function addReading(v,km){
+  const d=iso(today());v.kmReadings=(v.kmReadings||[]).filter(r=>r.date!==d).concat({date:d,km:Number(km)}).slice(-24);
+  v.km=Number(km);v.kmDate=d;
+}
+
+/* ---------- status ---------- */
+function status(doc,v){
+  let days=null,km=null,estDays=null,estDate=null;
+  const d=pd(doc.expiry); if(d) days=diffDays(today(),d);
+  if(doc.expiryKm){const k=kmInfo(v);if(k.est!=null){km=Math.round(Number(doc.expiryKm)-k.est);
+    if(k.rate>0){estDays=Math.round(km/k.rate*30.4);estDate=addDays(today(),estDays)}}}
+  const eff=[days,estDays].filter(x=>x!==null);const e=eff.length?Math.min(...eff):null;
+  let lvl="nd";
+  if(e!==null||km!==null){
+    if((e!==null&&e<0)||(km!==null&&km<0)) lvl="exp";
+    else if((e!==null&&e<=7)||(estDate&&monthLabel(estDate)==="luna asta")||(estDays===null&&km!==null&&km<=1000)) lvl="urg";
+    else if((e!==null&&e<=30)||(estDays===null&&km!==null&&km<=3000)) lvl="soon";
+    else lvl="ok";
+  }
+  const parts=[];
+  if(days!==null) parts.push(days<0?`expirat de ${-days} ${-days===1?"zi":"zile"}`:days===0?"expiră azi":days===1?"mâine":`${days} zile`);
+  if(km!==null) parts.push(km<0?`depășit ~${nf(-km)} km`:estDate?`~${nf(km)} km · ${monthLabel(estDate)}`:`~${nf(km)} km`);
+  return {lvl,days:e,km,estDate,label:parts.join(" · ")||"fără termen"};
+}
+const RANK={exp:0,urg:1,soon:2,ok:3,nd:4};
+function allDocs(){
+  const out=[];
+  for(const v of state.vehicles) for(const d of v.docs||[]) out.push({v,d,st:status(d,v)});
+  out.sort((a,b)=>RANK[a.st.lvl]-RANK[b.st.lvl] || (a.st.days??99999)-(b.st.days??99999));
+  return out;
+}
+function docTypes(){return PLANS[state.plan].biz?DOC_STD.concat(DOC_BIZ):DOC_STD}
+
+/* ---------- salvare ---------- */
+let saveTimer=null, writing=false, again=false;
+/* ---------- cont (Supabase) ---------- */
+const SUPA_URL="https://ukyrcbgwecsgnkuheidz.supabase.co";
+const SUPA_KEY="sb_publishable_k6327JR6f2rKWwf7gwsucA_TDZPy68U";
+let sb=null, sbUser=null, offlineWarned=false;
+const cacheKey=()=>"autolazi_cloud_"+(sbUser?sbUser.id:"");
+function cacheCloud(){try{if(sbUser)localStorage.setItem(cacheKey(),JSON.stringify(state))}catch(e){}}
+function save(){
+  if(storeMode==="local"){try{localStorage.setItem("alertaflota",JSON.stringify(state))}catch(e){}return}
+  if(storeMode==="offline"){if(!offlineWarned){offlineWarned=true;toast("Fără internet: modificările nu se salvează acum.")}return}
+  if(storeMode==="supa")cacheCloud();
+  clearTimeout(saveTimer);saveTimer=setTimeout(flush,600)}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&saveTimer){clearTimeout(saveTimer);flush()}});
+async function flush(){
+  saveTimer=null;
+  if(writing){again=true;return}
+  writing=true;
+  const body=JSON.parse(JSON.stringify(state));
+  try{
+    if(storeMode==="cloud"&&ref){await ref.set(body)}
+    else if(storeMode==="supa"&&sb&&sbUser){
+      const {error}=await sb.from("autolazi_data").upsert({user_id:sbUser.id,data:body});
+      if(error)throw error;
+    }
+    else if(storeMode==="local"){localStorage.setItem("alertaflota",JSON.stringify(body))}
+  }catch(e){
+    const m=String((e&&e.message)||"");
+    if(m.includes("PLAN_LIMIT")){toast("Planul tău nu permite atâtea mașini. Șterge una sau treci pe un plan mai mare.");writing=false;return}
+    if(storeMode==="cloud"||storeMode==="supa"){ toast("Nu am putut salva în cont. Reîncerc…"); setTimeout(()=>{writing=false;flush()},4000); return; }
+  }
+  writing=false;
+  if(again){again=false;flush()}
+}
+async function initStore(){
+  if(window.claude&&window.claude.use){
+    let done=false;
+    const t=setTimeout(()=>{if(!done){done=true;useLocal();render()}},10000);
+    try{
+      const [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
+      const id=user?await user.id():null;
+      if(db&&id&&!done){
+        ref=db.doc("data/users/"+id+"/fleet");
+        const snap=await ref.get();
+        if(done)return;
+        done=true;clearTimeout(t);
+        if(snap.exists){state=Object.assign(blank(),JSON.parse(JSON.stringify(snap.data())))}
+        storeMode="cloud";render();return;
+      }
+    }catch(e){}
+    if(!done){done=true;clearTimeout(t);useLocal();render()}
+    return;
+  }
+  // site public: cont Supabase
+  let wantsLocal=false;try{wantsLocal=localStorage.getItem("autolazi_local")==="1"}catch(e){}
+  if(!window.supabase||!window.supabase.createClient){
+    // fără bibliotecă (fără internet la prima încărcare): ce e salvat pe telefon
+    if(!wantsLocal&&tryOfflineCache())return;
+    useLocal();render();return;
+  }
+  sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  sb.auth.onAuthStateChange((ev,session)=>{
+    if(ev==="PASSWORD_RECOVERY")setTimeout(recoverySheet,300);
+    if(ev==="SIGNED_IN"&&session&&storeMode!=="supa"&&storeMode!=="loading")enterCloud(session.user);
+  });
+  let session=null;
+  try{session=(await sb.auth.getSession()).data.session}catch(e){}
+  if(session){await enterCloud(session.user);return}
+  if(wantsLocal){useLocal();render();return}
+  storeMode="anon";render();
+}
+function tryOfflineCache(){
+  try{const uid=localStorage.getItem("autolazi_last_uid");const c=uid&&localStorage.getItem("autolazi_cloud_"+uid);
+    if(c){state=Object.assign(blank(),JSON.parse(c));storeMode="offline";render();return true}}catch(e){}
+  return false;
+}
+async function enterCloud(user){
+  sbUser=user;storeMode="loading";render();
+  try{localStorage.setItem("autolazi_last_uid",user.id);const c=localStorage.getItem(cacheKey());if(c){state=Object.assign(blank(),JSON.parse(c))}}catch(e){}
+  try{
+    const r=await sb.from("autolazi_data").select("data").eq("user_id",user.id).maybeSingle();
+    if(r.error)throw r.error;
+    const pr=await sb.rpc("autolazi_planul_meu");
+    const plan=(pr&&!pr.error&&pr.data)||"free";
+    if(r.data&&r.data.data&&Object.keys(r.data.data).length){state=Object.assign(blank(),r.data.data);storeMode="supa"}
+    else{
+      let local=null;try{local=JSON.parse(localStorage.getItem("alertaflota")||"null")}catch(e){}
+      const moved=!!(local&&local.vehicles&&local.vehicles.length);
+      state=moved?Object.assign(blank(),local):blank();
+      storeMode="supa";state.plan=plan;
+      await flush();
+      if(moved){try{localStorage.removeItem("alertaflota")}catch(e){};toast("Am mutat în cont mașinile din versiunea de test ✓")}
+    }
+    state.plan=PLANS[plan]?plan:"free";
+    try{localStorage.removeItem("autolazi_local")}catch(e){}
+    cacheCloud();ui.tab="termene";render();
+  }catch(e){
+    // fără internet: arătăm ultima copie salvată pe telefon
+    const em=String((e&&(e.message||e.error_description))||e||"");
+    const net=/fetch|network|Failed to|Load failed/i.test(em);
+    storeMode=net&&localStorage.getItem(cacheKey())?"offline":"anon";
+    render();
+    if(storeMode==="anon"){const t=net?"Nu mă pot conecta. Verifică internetul și încearcă din nou.":"Contul e bun, dar datele nu s-au putut încărca. Cod: "+em;
+      loginMsg(t);toast(t);console.error("AutoLaZi enterCloud",e)}
+  }
+}
+function trRo(m){
+  m=String(m||"");
+  if(/Invalid login credentials/i.test(m))return"E-mail sau parolă greșită.";
+  if(/already registered|already exists/i.test(m))return"Există deja un cont cu acest e-mail. Apasă „Intră”.";
+  if(/Email not confirmed/i.test(m))return"Confirmă întâi adresa de e-mail (verifică și Spam).";
+  if(/Password should be at least|at least 6/i.test(m))return"Parola trebuie să aibă cel puțin 6 caractere.";
+  if(/rate limit|too many/i.test(m))return"Prea multe încercări. Mai încearcă peste câteva minute.";
+  if(/invalid.*email|valid email/i.test(m))return"Adresa de e-mail nu pare corectă.";
+  if(/fetch|network/i.test(m))return"Nu mă pot conecta. Verifică internetul.";
+  return"A apărut o problemă: "+m;
+}
+function recoverySheet(){
+  openSheet("Parolă nouă",`<form id="newpassf"><label class="f"><span>Scrie parola nouă (minim 6 caractere)</span><input type="password" name="p" minlength="6" required autocomplete="new-password"></label><button class="btn full">Salvează parola</button></form>`);
+}
+async function logout(){
+  try{localStorage.removeItem(cacheKey());localStorage.removeItem("autolazi_last_uid")}catch(e){}
+  try{await sb.auth.signOut()}catch(e){}
+  sbUser=null;state=blank();storeMode="anon";ui.tab="termene";render();
+}
+function useLocal(){
+  try{const raw=localStorage.getItem("alertaflota");if(raw)state=Object.assign(blank(),JSON.parse(raw));localStorage.setItem("alertaflota_t","1");storeMode="local"}
+  catch(e){storeMode="memory"}
+}
+
+/* ---------- UI helpers ---------- */
+function toast(m){const el=document.createElement("div");el.className="toast";el.textContent=m;document.body.appendChild(el);setTimeout(()=>el.remove(),2600)}
+function openSheet(title,html){
+  $("#modal").innerHTML=`<div class="ov" data-act="ovclose"><div class="sheet" role="dialog"><div class="sheet-h"><h3>${esc(title)}</h3><button class="x" data-act="close" aria-label="Închide">✕</button></div>${html}</div></div>`;
+}
+function closeSheet(){$("#modal").innerHTML=""}
+let confirmCb=null;
+function ask(msg,cb,okLabel="Șterge"){
+  confirmCb=cb;
+  openSheet("Confirmă",`<p>${esc(msg)}</p><div class="btns"><button class="btn danger" data-act="confirmok">${esc(okLabel)}</button><button class="btn sec" data-act="close">Renunță</button></div>`);
+}
+async function copy(text){try{await navigator.clipboard.writeText(text);toast("Copiat ✓")}catch(e){toast("Nu am putut copia automat — selectează textul manual")}}
+const badge=st=>`<span class="badge l-${st.lvl}">${esc(st.label)}</span>`;
+const plate=p=>`<span class="plate">${esc(p||"—")}</span>`;
+
+/* ---------- ecrane ---------- */
+function render(){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===ui.tab||(ui.tab==="vehicul"&&b.dataset.tab==="vehicule")));
+  $("#planPill").textContent="Plan "+PLANS[state.plan].name;
+  $("#fab").style.display=(ui.tab==="termene"||ui.tab==="vehicule"||ui.tab==="vehicul")&&(HAS_AI||state.vehicles.length)?"":"none";
+  if(!HAS_AI){$("#fab").dataset.act="manual";$("#fab").textContent="➕ Document"}
+  document.querySelector("nav.tabs").style.display=storeMode==="anon"?"none":"";
+  $("#planPill").style.display=storeMode==="anon"?"none":"";
+  if(storeMode==="anon"){$("#fab").style.display="none";$("#app").innerHTML=vLogin();return}
+  if(storeMode==="loading"){$("#app").innerHTML=`<div class="empty muted">Se încarcă datele…</div>`;return}
+  const banner=(storeMode==="local"||storeMode==="memory")?`<div class="note warn" style="margin-top:12px">🧪 <b>Versiune de test.</b> Datele rămân doar pe acest telefon / browser. ${storeMode==="memory"?"Browserul nu permite salvarea — datele se pierd la închidere.":"Fă din când în când „Copiază backup” din Setări."}${sb?`<div style="margin-top:8px"><button class="btn sec" data-act="gotologin">Fă-ți cont gratuit și păstrează datele</button></div>`:""}</div>`:"";
+  const offBanner=storeMode==="offline"?`<div class="note warn" style="margin-top:12px">📴 <b>Fără internet.</b> Vezi ultima versiune salvată pe telefon. Modificările nu se salvează până revine conexiunea.</div>`:"";
+  const f0={termene:vTermene,vehicule:vVehicule,vehicul:vVehicul,alerte:vAlerte,setari:vSetari}[ui.tab]||vTermene;
+  $("#app").innerHTML=offBanner+banner+(ui.tab==="termene"&&!HAS_AI?installBanner():"")+f0();
+}
+
+function vLogin(){
+  return `<div style="text-align:center;margin:22px 0 6px"><img src="/icon-192.png" alt="" style="width:72px;height:72px;border-radius:18px"></div>
+  <div class="card">
+    <h2 style="margin-top:4px">Intră în cont</h2>
+    <p class="small muted" style="margin-top:-4px">Contul îți păstrează mașinile pe orice telefon sau calculator. Același cont merge în toate aplicațiile de pe aplicatii-utile.ro.</p>
+    <form id="loginf">
+      <label class="f"><span>E-mail</span><input type="email" name="email" required autocomplete="email" inputmode="email"></label>
+      <label class="f"><span>Parolă</span><input type="password" name="pass" required minlength="6" autocomplete="current-password"></label>
+      <button class="btn full" type="submit" data-mode="in">Intră</button>
+      <button class="btn sec full" type="button" data-act="signup" style="margin-top:8px">Creează cont nou</button>
+      <button class="btn ghost full" type="button" data-act="forgot" style="margin-top:4px">Am uitat parola</button>
+      <div id="loginmsg" class="small" style="margin-top:8px;text-align:center"></div>
+    </form>
+  </div>
+  <div class="card small" style="text-align:center">Vrei doar să încerci?<br><button class="btn ghost" data-act="nolocal">Încearcă fără cont</button><br><span class="muted">Datele rămân doar pe acest telefon.</span></div>`;
+}
+function loginMsg(t,ok){const m=$("#loginmsg");if(m){m.textContent=t;m.style.color=ok?"var(--ok)":"var(--exp)"}}
+function loginVals(){const f=$("#loginf");return {email:(f.email.value||"").trim(),pass:f.pass.value||""}}
+function installBanner(){
+  if(isStandalone())return "";
+  try{if(localStorage.getItem("autolazi_noinstall"))return ""}catch(e){}
+  const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const body=installPrompt?`<button class="btn" data-act="install">📲 Instalează aplicația</button>`
+    :ios?`<span class="small">Pe iPhone: apasă <b>Partajează ⬆️</b> jos, apoi <b>„Adaugă pe ecranul principal”</b>.</span>`
+    :`<span class="small">Deschide meniul <b>⋮</b> din browser → <b>„Instalează aplicația”</b> sau <b>„Adaugă pe ecranul de pornire”</b>.</span>`;
+  return `<div class="card row" style="margin-top:12px;background:#eaf2fa;border-color:#cfe0f0"><img src="/icon-192.png" alt="" style="width:40px;height:40px;border-radius:10px"><div class="grow"><b>Pune AutoLaZi pe telefon</b><br>${body}</div><button class="x" data-act="noinstall" aria-label="Ascunde">✕</button></div>`;
+}
+function vTermene(){
+  const docs=allDocs();
+  if(!state.vehicles.length) return `<div class="empty"><div class="big">🚗</div><h2>Niciun vehicul încă</h2>
+    <p class="muted">Adaugă prima mașină${HAS_AI?" sau scanează un talon / o poliță RCA și completăm automat":", apoi documentele ei (RCA, ITP, rovinietă…)"}.</p>
+    <div class="btns" style="justify-content:center"><button class="btn" data-act="addv">+ Adaugă vehicul</button>${HAS_AI?`<button class="btn sec" data-act="scan">📷 Scanează document</button>`:""}</div>
+    <p style="margin-top:22px"><button class="btn ghost" data-act="demo">Încarcă o flotă demo</button></p></div>`;
+  const c={exp:0,urg:0,soon:0,ok:0};docs.forEach(x=>{if(c[x.st.lvl]!==undefined)c[x.st.lvl]++});
+  const st=(k,l)=>`<div class="stat l-${k} ${ui.filter===k?"on":""}" data-act="filter" data-k="${k}"><b>${c[k]}</b><span>${l}</span></div>`;
+  const list=docs.filter(x=>!ui.filter||x.st.lvl===ui.filter);
+  return `<div class="stats">${st("exp","Expirate")}${st("urg","≤ 7 zile")}${st("soon","≤ 30 zile")}${st("ok","În regulă")}</div>
+  <h2>${ui.filter?"Filtrat":"Următoarele termene"} ${ui.filter?`<button class="btn ghost small" data-act="filter" data-k="">arată tot</button>`:""}</h2>
+  ${list.length?list.map(x=>`<div class="item" data-act="openv" data-id="${x.v.id}">
+     <div class="grow"><div class="t">${esc(x.d.type)}</div><div class="s">${plate(x.v.plate)} ${x.d.expiry?fmt(x.d.expiry):""}${x.d.expiryKm?" · la "+Number(x.d.expiryKm).toLocaleString("ro-RO")+" km":""}${x.v.driver&&x.v.driver.name?" · "+esc(x.v.driver.name):""}</div></div>${badge(x.st)}</div>`).join("")
+  :`<div class="card muted">Nimic în această categorie. 👍</div>`}`;
+}
+
+function vVehicule(){
+  const p=PLANS[state.plan];
+  return `<h2>Vehicule (${state.vehicles.length}${p.maxV<999?" / "+p.maxV:""})</h2>
+  ${state.vehicles.map(v=>{
+    const sts=(v.docs||[]).map(d=>status(d,v));const worst=sts.sort((a,b)=>RANK[a.lvl]-RANK[b.lvl]||(a.days??9e9)-(b.days??9e9))[0];
+    return `<div class="item" data-act="openv" data-id="${v.id}"><div class="grow"><div class="t">${plate(v.plate)} ${esc(v.model||"")}</div>
+      <div class="s">${TYPES[v.type]||""} · ${(v.docs||[]).length} documente${v.driver&&v.driver.name?" · 👤 "+esc(v.driver.name):""}</div></div>${worst?badge(worst):""}</div>`}).join("")||`<div class="card muted">Nu ai adăugat încă vehicule.</div>`}
+  <button class="btn full" data-act="addv" style="margin-top:6px">+ Adaugă vehicul</button>`;
+}
+
+function vVehicul(){
+  const v=state.vehicles.find(x=>x.id===ui.vid);if(!v){ui.tab="vehicule";return vVehicule()}
+  const biz=PLANS[state.plan].biz;
+  const docs=(v.docs||[]).map(d=>({d,st:status(d,v)})).sort((a,b)=>RANK[a.st.lvl]-RANK[b.st.lvl]||(a.st.days??9e9)-(b.st.days??9e9));
+  const missing=docTypes().filter(t=>!(v.docs||[]).some(d=>d.type===t)&&["RCA","ITP","Rovinietă"].includes(t));
+  return `<p><button class="btn ghost" data-act="tab" data-tab="vehicule">← Vehicule</button></p>
+  <div class="card"><div class="row"><div class="grow"><div style="font-size:18px">${plate(v.plate)} <b>${esc(v.model||"")}</b></div>
+    <div class="muted small" style="margin-top:4px">${TYPES[v.type]||""}${v.vin?" · VIN "+esc(v.vin):""}</div>
+    ${v.driver&&v.driver.name?`<div class="small" style="margin-top:4px">👤 ${esc(v.driver.name)} ${v.driver.phone?"· "+esc(v.driver.phone):""}${v.driver.notify?" · 🔔 primește alerte":""}</div>`:""}</div>
+    <button class="btn sec" data-act="editv" data-id="${v.id}">Editează</button></div>
+    ${kmBox(v)}
+    <div class="small muted" style="margin-top:8px">📷 Scanări AI în ${today().getFullYear()}: ${scanUsed(v)} / ${scanLimit(v)} · completarea manuală e nelimitată</div>
+    <div class="btns"><button class="btn sec" data-act="km" data-id="${v.id}">🔢 Actualizează km</button>${biz?`<button class="btn sec" data-act="wallet" data-id="${v.id}">🪪 Portofel șofer</button>`:""}</div></div>
+  ${missing.length?`<div class="note warn">Lipsesc: <b>${missing.map(esc).join(", ")}</b> — adaugă-le ca să primești alerte.</div>`:""}
+  <h2>Documente</h2>
+  ${docs.map(x=>`<div class="item" data-act="editd" data-v="${v.id}" data-id="${x.d.id}"><div class="grow"><div class="t">${esc(x.d.type)}</div>
+     <div class="s">${[x.d.expiry?"expiră "+fmt(x.d.expiry):"",x.d.expiryKm?"la "+nf(x.d.expiryKm)+" km":""].filter(Boolean).join(" · ")}${x.d.insurer?" · "+esc(x.d.insurer):""}${x.d.number?" · nr. "+esc(x.d.number):""}</div></div>${badge(x.st)}</div>`).join("")||`<div class="card muted">Niciun document.</div>`}
+  <div class="btns"><button class="btn" data-act="adddoc" data-v="${v.id}">+ Adaugă document</button>${HAS_AI?`<button class="btn sec" data-act="scan" data-v="${v.id}">📷 Scanează</button>`:""}</div>`;
+}
+
+function kmBox(v){
+  const k=kmInfo(v);
+  if(!k.last&&!k.rate)return `<div class="note">Adaugă kilometrajul și câți km face pe lună — aplicația estimează când vin uleiul, distribuția și revizia.</div>`;
+  return `<div class="note" style="margin-bottom:0">🛣️ Acum ~<b>${k.est!=null?nf(k.est):"?"} km</b> (estimat)<br>
+    <span class="small">${k.last?`Ultima citire: ${nf(k.last.km)} km pe ${fmt(k.last.date)}`:"Nicio citire"} · ${k.rate?`~${nf(k.rate)} km/lună ${k.measured?"(calculat din citiri)":"(estimarea ta)"}`:"adaugă km/lună în Editează"}</span></div>`;
+}
+const isKmDoc=t=>/Revizie|ulei|distribuție|anvelope/i.test(t);
+function firstOfMonth(d){return new Date(d.getFullYear(),d.getMonth(),1)}
+const smsDocs=()=>["RCA","ITP","Rovinietă"].concat(PLANS[state.plan].biz?["Verificare tahograf","Copie conformă / Licență transport"]:[]);
+function vAlerte(){
+  const s=state.settings,p=PLANS[state.plan];
+  const smsOk=p.sms&&s.smsUrgent!==false;
+  const t0=today(),end=addDays(t0,30),items=[];
+  const co=s.company?s.company+": ":"";
+  const toFor=(v,critical)=>"Push + e-mail"+(v.driver&&v.driver.notify&&v.driver.name?" · și șoferul "+v.driver.name:"")+(critical&&smsOk?" · SMS dacă nu e văzut":"");
+  for(const v of state.vehicles){
+    for(const d of v.docs||[]){
+      const e=pd(d.expiry);
+      if(e)for(const th of s.thresholds){const sd=addDays(e,-th);if(sd>=t0&&sd<=end)items.push({sd,to:toFor(v,th<=2&&smsDocs().includes(d.type)),why:`cu ${th} zile înainte`,
+        text:`⚠️ ${co}${d.type} pentru ${v.plate} expiră pe ${fmt(d.expiry)} (în ${th} ${th===1?"zi":"zile"}).${v.driver&&v.driver.name?"\nȘofer: "+v.driver.name:""}\n${isKmDoc(d.type)?"Programează-te la service.":"Reînnoiește la timp ca să eviți amenda."}`})}
+      if(d.expiryKm){const st=status(d,v);if(st.estDate){
+        let sd=firstOfMonth(st.estDate);if(sd<t0)sd=t0;
+        if(sd<=end)items.push({sd,to:toFor(v,false),why:"luna estimată după km",
+          text:`🔧 ${co}${d.type} la ${v.plate} e estimat(ă) ${st.estDate<=t0?"acum":"în "+monthLabel(st.estDate)} (acum ~${nf(kmInfo(v).est)} km, prag ${nf(d.expiryKm)} km).\nVerifică kilometrajul la bord și programează-te la service.`});
+      }}
+    }
+  }
+  const kmV=state.vehicles.filter(v=>(v.docs||[]).some(d=>d.expiryKm));
+  if(kmV.length){const sd=new Date(t0.getFullYear(),t0.getMonth()+1,1);
+    items.push({sd,to:"Push + e-mail",why:"lunar, către administrator",text:`🔢 ${co}Actualizează kilometrajul pentru ${kmV.length} ${kmV.length===1?"vehicul":"vehicule"} (${kmV.slice(0,4).map(v=>v.plate).join(", ")}${kmV.length>4?"…":""}), ca să știm când vin uleiul, distribuția și revizia.`})}
+  items.sort((a,b)=>a.sd-b.sd);
+  return `<h2>Reguli de alertare</h2>
+  <div class="card">
+    <div class="small muted" style="margin-bottom:6px">Trimite alertă cu atâtea zile înainte de expirare:</div>
+    <div class="chips">${[60,30,14,7,3,2,1].map(n=>`<button class="chip ${s.thresholds.includes(n)?"on":""}" data-act="th" data-n="${n}">${n} ${n===1?"zi":"zile"}</button>`).join("")}</div>
+    <div class="note" style="margin-top:14px">📲 <b>Notificări pe telefon + e-mail</b> — incluse, pentru toate alertele.</div>
+    <label class="f"><span>E-mail pentru alerte (administrator / contabilă)</span><input type="email" id="contact" value="${esc(s.contact)}" placeholder="nume@firma.ro"></label>
+    ${p.sms?`<label class="row" style="gap:10px;margin:4px 0 10px;cursor:pointer"><input type="checkbox" id="smsUrgent" ${smsOk?"checked":""} style="width:20px;height:20px">
+      <span><b>SMS de urgență</b><br><span class="small muted">Doar pentru RCA, ITP, rovinietă${p.biz?", tahograf și copie conformă":""}, cu 2 zile înainte, și doar dacă alerta n-a fost văzută pe telefon sau e-mail (concediu, fără internet). Kilometrajul și restul merg doar pe telefon + e-mail.</span></span></label>
+      ${smsOk?`<label class="f"><span>Telefon pentru SMS de urgență</span><input type="tel" id="phone" value="${esc(s.phone)}" placeholder="07xx xxx xxx"></label>`:""}`
+    :`<div class="note">SMS-ul de urgență e disponibil pe Family, Small Business și Business.</div>`}
+    <div class="small muted">Șoferii primesc notificări doar dacă bifezi asta la vehicul (opțional).</div>
+  </div>
+  <h2>Ce se va trimite în următoarele 30 de zile (${items.length})</h2>
+  <div class="note">În prototip mesajele nu pleacă efectiv — vezi exact ce ar primi clientul. Trimiterea reală vine în versiunea construită.</div>
+  ${items.map((x,i)=>{lastMsgs.push(x.text);return `<div class="card"><div class="row"><div class="grow"><b>${fmt(x.sd)}</b> · ${esc(x.to)} <span class="muted small">(${esc(x.why)})</span></div><button class="btn ghost small" data-act="copymsg" data-i="${i}">Copiază</button></div>
+    <div class="msg">${esc(x.text)}</div></div>`}).join("")||`<div class="card muted">Nicio alertă programată în următoarele 30 de zile.</div>`}`;
+}
+let lastMsgs=[];
+
+function vSetari(){
+  const acct=storeMode==="supa"&&sbUser?`<h2>Contul tău</h2><div class="card"><div class="row"><div class="grow small">Intrat ca <b>${esc(sbUser.email||"")}</b></div><button class="btn sec" data-act="logout">Ieși din cont</button></div></div>`:"";
+  const modeTxt={supa:"✅ Datele sunt salvate în contul tău și le vezi pe orice telefon sau calculator.",offline:"📴 Fără internet: vezi ultima copie salvată pe telefon.",cloud:"✅ Datele se salvează în contul tău Claude și le regăsești pe orice dispozitiv.",local:"Versiune de test: datele se salvează doar în acest browser, pe acest dispozitiv. Conturile cu sincronizare vin în versiunea următoare.",memory:"⚠️ Datele NU se salvează — se pierd la închiderea paginii."}[storeMode];
+  return `${acct}<h2>Planuri și prețuri</h2>
+  <div class="card"><div class="small muted" style="margin-bottom:8px">${storeMode==="supa"?"Planul tău e marcat cu ✓. În perioada de test ai acces complet, gratuit. Plata online vine în curând.":"În versiunea de test poți încerca orice plan gratuit — apasă pe unul ca să vezi ce primește:"}</div>
+    ${Object.entries(PLANS).map(([k,p])=>`<div class="item plan" data-act="plan" data-k="${k}" style="${state.plan===k?"border-color:var(--brand2);border-width:2px":""}">
+      <div class="grow"><div class="row" style="align-items:baseline"><div class="t grow">${p.name}</div><div style="text-align:right"><b>${p.pm}</b>${p.py?`<div class="small muted">${p.py}</div>`:""}</div></div>
+      <div class="s">${esc(p.desc)}</div></div>${state.plan===k?"<b style='color:var(--brand2)'>✓</b>":""}</div>`).join("")}
+    <div class="small muted">Prețuri finale, cu plata pe lună sau pe an, la lansarea oficială.</div>
+  </div>
+  <h2>Firmă</h2>
+  <div class="card"><label class="f" style="margin:0"><span>Numele firmei (apare în mesaje)</span><input type="text" id="company" value="${esc(state.settings.company)}" placeholder="ex: Trans Express SRL"></label></div>
+  <h2>Instalează pe telefon</h2>
+  ${isStandalone()?`<div class="card small">✅ Aplicația e instalată pe acest dispozitiv.</div>`:`${installPrompt?`<button class="btn full" data-act="install" style="margin-bottom:8px">📲 Instalează aplicația</button>`:""}<div class="card small"><b>iPhone:</b> deschide în Safari → butonul Partajează ⬆️ → „Adaugă pe ecranul principal”.<br><b>Android:</b> în Chrome → meniul ⋮ → „Instalează aplicația” / „Adaugă pe ecranul de pornire”.</div>`}
+  <h2>Date</h2>
+  <div class="card"><div class="small">${modeTxt}</div>
+    <div class="btns"><button class="btn sec" data-act="export">Copiază backup</button><button class="btn sec" data-act="import">Importă backup</button><button class="btn sec" data-act="demo">Flotă demo</button><button class="btn danger" data-act="reset">Șterge tot</button></div></div>
+  <p class="muted small" style="text-align:center;margin-top:20px">AutoLaZi · versiune de test<br>parte din <a href="https://aplicatii-utile.ro">aplicatii-utile.ro</a> · ASE FOOTBALL MANAGEMENT SRL</p>`;
+}
+
+/* ---------- formulare ---------- */
+function vehicleForm(v){
+  v=v||{type:"autoturism",driver:{}};const biz=PLANS[state.plan].biz;
+  openSheet(v.id?"Editează vehicul":"Vehicul nou",`<form id="vf">
+    <label class="f"><span>Număr înmatriculare *</span><input type="text" name="plate" required value="${esc(v.plate)}" placeholder="B 123 ABC" style="text-transform:uppercase"></label>
+    <div class="grid2"><label class="f"><span>Tip</span><select name="type">${Object.entries(TYPES).map(([k,l])=>`<option value="${k}" ${v.type===k?"selected":""}>${l}</option>`).join("")}</select></label>
+    <label class="f"><span>Km actuali (bord)</span><input type="number" name="km" inputmode="numeric" value="${esc(v.km)}"></label></div>
+    <label class="f"><span>Cam câți km face pe lună? (estimare)</span><input type="number" name="kmpm" inputmode="numeric" value="${esc(v.kmPerMonth)}" placeholder="ex: 3000"></label>
+    <label class="f"><span>Marcă / model</span><input type="text" name="model" value="${esc(v.model)}" placeholder="Dacia Logan"></label>
+    <label class="f"><span>Serie șasiu (VIN)</span><input type="text" name="vin" value="${esc(v.vin)}" style="text-transform:uppercase"></label>
+    <div class="small muted" style="margin:4px 0 6px">Șofer (opțional — pentru evidență)</div>
+    <div class="grid2"><label class="f"><span>Nume șofer</span><input type="text" name="dname" value="${esc(v.driver&&v.driver.name)}"></label>
+    <label class="f"><span>Telefon</span><input type="tel" name="dphone" value="${esc(v.driver&&v.driver.phone)}"></label></div>
+    <label class="f"><span>E-mail șofer</span><input type="email" name="demail" value="${esc(v.driver&&v.driver.email)}"></label>
+    <label class="row" style="gap:10px;margin-bottom:14px;cursor:pointer"><input type="checkbox" name="dnotify" ${v.driver&&v.driver.notify?"checked":""} style="width:20px;height:20px"><span class="small">Trimite și șoferului notificările pentru această mașină (telefon + e-mail)</span></label>
+    <input type="hidden" name="rid" value="${esc(v.id||"")}">
+    <button class="btn full" type="submit">Salvează</button>
+    ${v.id?`<button class="btn danger full" type="button" data-act="delv" data-id="${v.id}" style="margin-top:8px">Șterge vehiculul</button>`:""}
+  </form>`);
+}
+function docForm(vid,d,fromScan){
+  d=d||{};const types=docTypes();
+  if(d.type&&!types.includes(d.type))types.push(d.type);
+  openSheet(d.id?"Editează document":"Document nou",`<form id="df">
+    ${fromScan?`<div class="note">✨ Câmpuri completate automat din poză. Verifică-le înainte să salvezi.</div>`:""}
+    <label class="f"><span>Vehicul</span><select name="vid">${state.vehicles.map(v=>`<option value="${v.id}" ${v.id===vid?"selected":""}>${esc(v.plate)} ${esc(v.model||"")}</option>`).join("")}</select></label>
+    <label class="f"><span>Tip document</span><select name="type">${types.map(t=>`<option ${d.type===t?"selected":""}>${esc(t)}</option>`).join("")}</select></label>
+    <div class="grid2"><label class="f"><span>Data expirării</span><input type="date" name="expiry" value="${esc(d.expiry)}"></label>
+    <label class="f"><span>și/sau la km (ulei, distribuție, revizie)</span><input type="number" inputmode="numeric" name="expiryKm" value="${esc(d.expiryKm)}"></label></div>
+    <div class="grid2"><label class="f"><span>Nr. document / poliță</span><input type="text" name="number" value="${esc(d.number)}"></label>
+    <label class="f"><span>Emitent / asigurator</span><input type="text" name="insurer" value="${esc(d.insurer)}"></label></div>
+    <label class="f"><span>Notă</span><input type="text" name="note" value="${esc(d.note)}"></label>
+    <div class="small muted" style="margin:-4px 0 12px">Pentru ulei / distribuție pune pragul de km din carnetul de service (ex: ultimul schimb + 15.000 km). Poți pune și dată — alerta vine la ce apare primul.</div>
+    <input type="hidden" name="rid" value="${esc(d.id||"")}"><input type="hidden" name="ovid" value="${esc(vid||"")}">
+    <button class="btn full" type="submit">Salvează</button>
+    ${d.id?`<button class="btn danger full" type="button" data-act="deld" data-v="${vid}" data-id="${d.id}" style="margin-top:8px">Șterge documentul</button>`:""}
+  </form>`);
+}
+
+/* ---------- scanare AI ---------- */
+let scanBlob=null, scanV=null;
+async function getSample(){try{return window.claude&&window.claude.use?await window.claude.use("sample"):null}catch(e){return null}}
+const ACCOUNT_MONTHLY_SCANS=100;
+function scanLimit(v){const base=docTypes().filter(t=>!isKmDoc(t)).length+1;return Math.ceil(base*1.5)}
+function scanUsed(v){return ((v&&v.scans)||{})[today().getFullYear()]||0}
+function monthKey(){const t=today();return t.getFullYear()+"-"+(t.getMonth()+1)}
+function accountUsed(){return (state.scanMonth&&state.scanMonth[monthKey()])||0}
+function countScan(v){const y=today().getFullYear();if(v){v.scans=v.scans||{};v.scans[y]=(v.scans[y]||0)+1}
+  state.scanMonth={[monthKey()]:accountUsed()+1};save()}
+const manualBtn=`<button class="btn full sec" data-act="manual" style="margin-top:8px">✍️ Completează manual</button>`;
+function scanSheet(vid){
+  scanV=vid||null;scanBlob=null;
+  const v=scanV?state.vehicles.find(x=>x.id===scanV):null;
+  if(v&&scanUsed(v)>=scanLimit(v)||accountUsed()>=ACCOUNT_MONTHLY_SCANS){
+    openSheet("Scanează document",`<div class="note warn">${v&&scanUsed(v)>=scanLimit(v)?`Ai folosit toate cele ${scanLimit(v)} scanări AI pentru ${esc(v.plate)} în ${today().getFullYear()}.`:`Ai atins limita de ${ACCOUNT_MONTHLY_SCANS} scanări AI pe lună pentru cont.`} Poți completa datele manual — durează un minut.</div>${manualBtn}`);return}
+  openSheet("Scanează document",`${v?`<div class="small muted" style="margin-bottom:6px">Scanări AI pentru ${esc(v.plate)}: ${scanUsed(v)} / ${scanLimit(v)} în ${today().getFullYear()}</div>`:""}<p class="muted small">Fă o poză clară la talon, polița RCA/CASCO, ITP sau rovinietă. AI-ul citește datele și completează formularul.</p>
+    <input type="file" id="scanfile" accept="image/*" capture="environment" style="display:none">
+    <button class="btn full sec" data-act="pick">📷 Fă poză / alege imagine</button>
+    <div id="scanprev"></div>
+    <button class="btn full" id="scango" data-act="scango" disabled style="margin-top:10px">✨ Citește datele</button>
+    <div id="scanmsg" class="small muted" style="margin-top:8px"></div>${manualBtn}`);
+}
+async function shrink(file){
+  try{const img=await createImageBitmap(file);const s=Math.min(1,1600/Math.max(img.width,img.height));
+    const c=document.createElement("canvas");c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    return await new Promise(r=>c.toBlob(b=>r(b||file),"image/jpeg",.85));}catch(e){return file}
+}
+async function runScan(){
+  const btn=$("#scango"),msg=$("#scanmsg");
+  const sample=await getSample();
+  if(!sample){msg.textContent="Scanarea AI nu e disponibilă în această vizualizare. Deschide pagina din claude.ai sau completează manual.";return}
+  try{const lim=await sample.limits();if(!lim||!lim.images){msg.textContent="Analiza imaginilor nu e disponibilă aici. Completează manual.";return}}catch(e){}
+  btn.disabled=true;btn.innerHTML=`<span class="spin"></span> Citesc documentul…`;msg.textContent="";
+  const prompt=`Citește acest document auto din România (poate fi: certificat de înmatriculare/talon, poliță RCA, poliță CASCO, dovadă ITP, rovinietă, licență/copie conformă, verificare tahograf, atestat șofer, alt document).
+Răspunde DOAR cu un obiect JSON, fără alt text, cu cheile:
+{"tip": unul dintre ${JSON.stringify(DOC_STD.concat(DOC_BIZ,["Talon"]))},
+ "nr_inmatriculare": string sau null (format ca "B 123 ABC"),
+ "serie_sasiu": string sau null,
+ "marca_model": string sau null,
+ "data_expirare": "YYYY-MM-DD" sau null (pentru RCA/CASCO = sfârșitul valabilității; pentru talon = data următoarei inspecții ITP dacă apare),
+ "numar_document": string sau null,
+ "emitent": string sau null (asigurator / emitent),
+ "categorie_vehicul": "autoturism" | "duba" | "camion" | null}
+Dacă nu poți citi o valoare, pune null. Nu inventa date.`;
+  try{
+    const r=await sample.json(prompt,{images:[scanBlob],modelTier:"default"});
+    closeSheet();applyScan(r||{});
+  }catch(e){
+    btn.disabled=false;btn.textContent="✨ Încearcă din nou";if(!(e&&(e.code==="not_granted"||e.code==="rate_limited")))countScan(scanV?state.vehicles.find(x=>x.id===scanV):null);
+    msg.textContent=e&&e.code==="rate_limited"?"Prea multe cereri — încearcă din nou peste un minut sau completează manual.":e&&e.code==="not_granted"?"Scanarea AI nu a fost permisă. Completează manual mai jos.":"Nu am putut citi documentul. Încearcă o poză mai clară sau apasă „Completează manual”.";
+  }
+}
+function normPlate(p){return String(p||"").toUpperCase().replace(/[^A-Z0-9]/g,"")}
+function applyScan(r){
+  const pl=r.nr_inmatriculare?String(r.nr_inmatriculare).toUpperCase().trim():"";
+  let v=scanV?state.vehicles.find(x=>x.id===scanV):null;
+  if(!v&&pl)v=state.vehicles.find(x=>normPlate(x.plate)===normPlate(pl));
+  if(v&&!scanV&&scanUsed(v)>=scanLimit(v)){toast(`Limita de scanări pentru ${v.plate} e atinsă — completează manual`);ui.tab="vehicul";ui.vid=v.id;render();docForm(v.id,{});return}
+  if(!v){
+    v={id:uid(),plate:pl||"NOU",type:r.categorie_vehicul&&TYPES[r.categorie_vehicul]?r.categorie_vehicul:"autoturism",model:r.marca_model||"",vin:r.serie_sasiu||"",km:"",driver:{},docs:[]};
+    state.vehicles.push(v);save();toast("Vehicul nou creat din poză: "+v.plate);
+  }else{
+    if(!v.vin&&r.serie_sasiu)v.vin=r.serie_sasiu;if(!v.model&&r.marca_model)v.model=r.marca_model;save();
+  }
+  countScan(v);
+  ui.tab="vehicul";ui.vid=v.id;render();
+  const tip=r.tip==="Talon"?"ITP":(r.tip||"RCA");
+  if(r.tip==="Talon"&&!r.data_expirare){toast("Am completat datele vehiculului din talon ✓");return}
+  docForm(v.id,{type:tip,expiry:/^\d{4}-\d{2}-\d{2}$/.test(r.data_expirare||"")?r.data_expirare:"",number:r.numar_document||"",insurer:r.emitent||""},true);
+}
+
+/* ---------- portofel șofer ---------- */
+function walletSheet(v){
+  const docs=(v.docs||[]).filter(d=>!/Revizie|anvelope/i.test(d.type)).map(d=>({d,st:status(d,v)}));
+  openSheet("Portofel șofer",`<div class="wallet"><div class="small" style="opacity:.8">Vehicul</div><div style="font-size:20px;margin:4px 0">${plate(v.plate)} ${esc(v.model||"")}</div>
+    <div class="small">${v.driver&&v.driver.name?"Șofer: "+esc(v.driver.name):"Niciun șofer alocat"}${v.vin?" · VIN "+esc(v.vin):""}</div></div>
+    ${docs.map(x=>`<div class="wdoc"><div class="row"><div class="grow"><b>${esc(x.d.type)}</b><div class="small muted">${x.d.number?"Nr. "+esc(x.d.number)+" · ":""}${x.d.insurer?esc(x.d.insurer)+" · ":""}valabil până la ${fmt(x.d.expiry)}</div></div>${badge(x.st)}</div></div>`).join("")||`<p class="muted">Niciun document.</p>`}
+    <div class="note">Așa vede șoferul documentele pe telefon (doar citire), util la control. În versiunea finală îi trimiți un link (sau îl primește pe e-mail, dacă e bifat) și vede și pozele documentelor.</div>
+    <button class="btn sec full" data-act="copywallet" data-id="${v.id}">Copiază rezumatul pentru șofer</button>`);
+}
+
+/* ---------- demo ---------- */
+function demo(){
+  const t=today(),D=n=>iso(addDays(t,n));
+  state.vehicles=[
+    {id:uid(),plate:"B 101 TRX",type:"camion",model:"MAN TGX",vin:"WMA06XZZ7MP123456",km:410000,kmDate:D(-10),kmPerMonth:9000,kmReadings:[{date:D(-60),km:395000},{date:D(-10),km:410000}],driver:{name:"Ion Popescu",phone:"0722 111 222",email:"ion@exemplu.ro",notify:true},docs:[
+      {id:uid(),type:"RCA",expiry:D(5),insurer:"Groupama",number:"RO/22/123456"},{id:uid(),type:"ITP",expiry:D(48)},
+      {id:uid(),type:"Rovinietă",expiry:D(-3)},{id:uid(),type:"Verificare tahograf",expiry:D(21)},
+      {id:uid(),type:"Copie conformă / Licență transport",expiry:D(190),number:"CC-004512"},{id:uid(),type:"Revizie",expiryKm:440000},{id:uid(),type:"Schimb ulei + filtre",expiryKm:418000}]},
+    {id:uid(),plate:"IF 22 DUB",type:"duba",model:"Ford Transit",vin:"",km:188000,kmDate:D(-20),kmPerMonth:3500,kmReadings:[{date:D(-20),km:188000}],driver:{name:"Mihai Ionescu",phone:"0744 333 444"},docs:[
+      {id:uid(),type:"RCA",expiry:D(64),insurer:"Allianz-Țiriac"},{id:uid(),type:"ITP",expiry:D(12)},{id:uid(),type:"Rovinietă",expiry:D(130)},
+      {id:uid(),type:"Extinctor",expiry:D(27)},{id:uid(),type:"Schimb anvelope",expiry:D(9),note:"montare iarnă"},{id:uid(),type:"Kit distribuție",expiryKm:200000,expiry:D(400)}]},
+    {id:uid(),plate:"CJ 07 ABC",type:"autoturism",model:"Dacia Duster",vin:"",km:95400,kmDate:D(-5),kmPerMonth:1500,driver:{name:"Ana Marin",phone:""},docs:[
+      {id:uid(),type:"RCA",expiry:D(210),insurer:"Generali"},{id:uid(),type:"ITP",expiry:D(340)},{id:uid(),type:"CASCO",expiry:D(29),insurer:"Omniasig"},{id:uid(),type:"Schimb ulei + filtre",expiryKm:100000,expiry:D(200)}]}
+  ];
+  if(!state.settings.company)state.settings.company="Trans Demo SRL";
+  save();ui.tab="termene";ui.filter=null;render();toast("Flotă demo încărcată");
+}
+
+/* ---------- evenimente ---------- */
+document.addEventListener("click",async e=>{
+  const el=e.target.closest("[data-act]");if(!el)return;
+  const a=el.dataset.act;
+  if(a==="ovclose"&&e.target!==el)return;
+  switch(a){
+    case "tab":ui.tab=el.dataset.tab;ui.filter=null;closeSheet();render();scrollTo(0,0);break;
+    case "filter":ui.filter=el.dataset.k===ui.filter||!el.dataset.k?null:el.dataset.k;render();break;
+    case "openv":ui.tab="vehicul";ui.vid=el.dataset.id;render();scrollTo(0,0);break;
+    case "addv":{const p=PLANS[state.plan];if(state.vehicles.length>=p.maxV){toast(`Planul ${p.name} permite ${p.maxV} ${p.maxV===1?"vehicul":"vehicule"}`);break}vehicleForm();break}
+    case "editv":vehicleForm(state.vehicles.find(v=>v.id===el.dataset.id));break;
+    case "delv":ask("Ștergi vehiculul și toate documentele lui?",()=>{state.vehicles=state.vehicles.filter(v=>v.id!==el.dataset.id);save();ui.tab="vehicule";closeSheet();render()});break;
+    case "adddoc":docForm(el.dataset.v);break;
+    case "editd":{const v=state.vehicles.find(x=>x.id===el.dataset.v);docForm(v.id,v.docs.find(d=>d.id===el.dataset.id));break}
+    case "deld":ask("Ștergi documentul?",()=>{const v=state.vehicles.find(x=>x.id===el.dataset.v);v.docs=v.docs.filter(d=>d.id!==el.dataset.id);save();closeSheet();render()});break;
+    case "km":{const v=state.vehicles.find(x=>x.id===el.dataset.id);openSheet("Km actuali – "+v.plate,`<form id="kmf"><input type="hidden" name="rid" value="${v.id}"><label class="f"><span>Kilometraj</span><input type="number" inputmode="numeric" name="km" value="${esc(v.km)}" autofocus></label><button class="btn full">Salvează</button></form>`);break}
+    case "wallet":walletSheet(state.vehicles.find(v=>v.id===el.dataset.id));break;
+    case "copywallet":{const v=state.vehicles.find(x=>x.id===el.dataset.id);copy(`Documente ${v.plate}:\n`+(v.docs||[]).filter(d=>d.expiry).map(d=>`• ${d.type}${d.number?" nr. "+d.number:""} – valabil până la ${fmt(d.expiry)}`).join("\n"));break}
+    case "scan":if(!state.vehicles.length&&!el.dataset.v){}scanSheet(el.dataset.v||(ui.tab==="vehicul"?ui.vid:null));break;
+    case "manual":closeSheet();if(!state.vehicles.length)vehicleForm();else docForm(scanV||(ui.tab==="vehicul"?ui.vid:state.vehicles[0].id),{});break;
+    case "pick":$("#scanfile").click();break;
+    case "scango":if(scanBlob)runScan();break;
+    case "th":{const n=+el.dataset.n,t=state.settings.thresholds;state.settings.thresholds=t.includes(n)?t.filter(x=>x!==n):t.concat(n).sort((a,b)=>b-a);save();render();break}
+    case "copymsg":copy(lastMsgs[+el.dataset.i]||"");break;
+    case "install":if(installPrompt){const ip=installPrompt;installPrompt=null;try{ip.prompt();await ip.userChoice}catch(e){}render()}break;
+    case "noinstall":try{localStorage.setItem("autolazi_noinstall","1")}catch(e){}render();break;
+    case "plan":if(storeMode==="supa"||storeMode==="offline"){toast("Planurile plătite se activează în curând. Acum ai acces complet gratuit.");break}state.plan=el.dataset.k;save();render();break;
+    case "signup":{const v=loginVals();if(!v.email||v.pass.length<6){loginMsg("Scrie e-mailul și o parolă de minim 6 caractere.");break}
+      loginMsg("Se creează contul…",true);
+      const {data,error}=await sb.auth.signUp({email:v.email,password:v.pass,options:{emailRedirectTo:location.origin}});
+      if(error){loginMsg(trRo(error.message));break}
+      if(data.session){await enterCloud(data.user)}else loginMsg("Ți-am trimis un e-mail de confirmare. Apasă pe linkul din el (verifică și Spam), apoi intră aici.",true);
+      break}
+    case "forgot":{const v=loginVals();if(!v.email){loginMsg("Scrie întâi adresa de e-mail.");break}
+      const {error}=await sb.auth.resetPasswordForEmail(v.email,{redirectTo:location.origin});
+      loginMsg(error?trRo(error.message):"Ți-am trimis pe e-mail un link pentru parolă nouă.",!error);break}
+    case "nolocal":try{localStorage.setItem("autolazi_local","1")}catch(e){}useLocal();render();break;
+    case "gotologin":try{localStorage.removeItem("autolazi_local")}catch(e){}storeMode="anon";render();break;
+    case "logout":ask("Ieși din cont pe acest telefon? Datele rămân în cont.",()=>{closeSheet();logout()},"Ieși");break;
+    case "export":copy(JSON.stringify(state));break;
+    case "import":openSheet("Importă backup",`<form id="impf"><label class="f"><span>Lipește aici textul copiat cu „Copiază backup”</span><textarea name="j"></textarea></label><button class="btn full">Importă</button></form>`);break;
+    case "demo":if(state.vehicles.length)ask("Înlocuiești datele actuale cu flota demo?",()=>{closeSheet();demo()},"Încarcă demo");else demo();break;
+    case "reset":ask("Ștergi toate vehiculele și documentele?",()=>{const pl=state.plan;state=blank();if(storeMode==="supa")state.plan=pl;save();closeSheet();ui.tab="termene";render()},"Șterge tot");break;
+    case "confirmok":if(confirmCb){const c=confirmCb;confirmCb=null;c()}break;
+    case "close":case "ovclose":closeSheet();break;
+  }
+});
+document.addEventListener("change",async e=>{
+  if(e.target.id==="smsUrgent"){state.settings.smsUrgent=e.target.checked;save();render();return}
+  if(e.target.id==="scanfile"&&e.target.files[0]){
+    scanBlob=await shrink(e.target.files[0]);
+    $("#scanprev").innerHTML=`<img class="preview" src="${URL.createObjectURL(scanBlob)}" alt="previzualizare">`;
+    $("#scango").disabled=false;
+  }
+});
+document.addEventListener("input",e=>{
+  if(e.target.id==="contact"){state.settings.contact=e.target.value;save()}
+  if(e.target.id==="phone"){state.settings.phone=e.target.value;save()}
+  if(e.target.id==="company"){state.settings.company=e.target.value;save()}
+});
+document.addEventListener("submit",e=>{
+  e.preventDefault();const f=new FormData(e.target),g=k=>(f.get(k)||"").toString().trim();
+  if(e.target.id==="vf"){
+    const id=g("rid");let v=id?state.vehicles.find(x=>x.id===id):null;
+    const data={plate:g("plate").toUpperCase(),type:g("type"),kmPerMonth:g("kmpm")?Number(g("kmpm")):"",model:g("model"),vin:g("vin").toUpperCase()};
+    const newKm=g("km")?Number(g("km")):"";
+    data.driver={name:g("dname"),phone:g("dphone"),email:g("demail"),notify:f.get("dnotify")==="on"};
+    if(v)Object.assign(v,data);else{v=Object.assign({id:uid(),driver:{},docs:[],km:""},data);state.vehicles.push(v)}
+    if(newKm!==""&&newKm!==Number(v.km))addReading(v,newKm);
+    save();closeSheet();ui.tab="vehicul";ui.vid=v.id;render();
+  }
+  if(e.target.id==="df"){
+    const id=g("rid"),vid=g("vid"),ovid=g("ovid");
+    const d={id:id||uid(),type:g("type"),expiry:g("expiry"),expiryKm:g("expiryKm")?Number(g("expiryKm")):"",number:g("number"),insurer:g("insurer"),note:g("note")};
+    if(!d.expiry&&!d.expiryKm){toast("Pune o dată de expirare sau un prag de km");return}
+    if(id&&ovid){const ov=state.vehicles.find(x=>x.id===ovid);if(ov)ov.docs=ov.docs.filter(x=>x.id!==id)}
+    const v=state.vehicles.find(x=>x.id===vid);v.docs=(v.docs||[]).filter(x=>x.id!==d.id).concat(d);
+    save();closeSheet();ui.tab="vehicul";ui.vid=v.id;render();toast("Salvat ✓");
+  }
+  if(e.target.id==="kmf"){const v=state.vehicles.find(x=>x.id===g("rid"));if(g("km")){addReading(v,g("km"));save();toast(g("drv")?"Mulțumim! Km trimiși ✓":"Km salvați ✓")}closeSheet();render()}
+  if(e.target.id==="loginf"){(async()=>{const v=loginVals();loginMsg("Se verifică…",true);
+    const {data,error}=await sb.auth.signInWithPassword({email:v.email,password:v.pass});
+    if(error){loginMsg(trRo(error.message));return}await enterCloud(data.user)})();return}
+  if(e.target.id==="newpassf"){(async()=>{const {error}=await sb.auth.updateUser({password:g("p")});
+    if(error){toast(trRo(error.message));return}closeSheet();toast("Parola a fost schimbată ✓")})();return}
+  if(e.target.id==="impf"){try{const j=JSON.parse(g("j"));if(!Array.isArray(j.vehicles))throw 0;state=Object.assign(blank(),j);save();closeSheet();ui.tab="termene";render();toast("Import reușit")}catch(err){toast("Textul nu e un backup valid")}}
+});
+const _render=render;render=function(){lastMsgs=[];_render()};
+
+render();
+initStore();
+try{if("serviceWorker" in navigator&&location.protocol==="https:"&&!HAS_AI)navigator.serviceWorker.register("/sw.js").catch(()=>{})}catch(e){}
+</script>
+</body>
+</html>

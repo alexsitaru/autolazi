@@ -1,0 +1,16 @@
+{
+  "name": "AutoLaZi – Mașina ta, cu actele la zi!",
+  "short_name": "AutoLaZi",
+  "description": "Alerte pentru RCA, ITP, rovinietă, ulei, distribuție și revizie.",
+  "lang": "ro",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f5f8",
+  "theme_color": "#0f3d5e",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
