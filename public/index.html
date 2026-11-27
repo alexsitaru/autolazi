@@ -120,10 +120,10 @@ const DOC_STD = ["RCA","ITP","Rovinietă","CASCO","Revizie","Schimb ulei + filtr
 const LUNI = ["ian.","feb.","mar.","apr.","mai","iun.","iul.","aug.","sep.","oct.","nov.","dec."];
 const DOC_BIZ = ["Verificare tahograf","Copie conformă / Licență transport","Atestat profesional șofer","Extinctor","Trusă medicală","Fișă medicală / Aviz psihologic"];
 const PLANS = {
-  free:{name:"Free",price:"gratuit",pm:"0 lei",py:"",sms:false,biz:false,maxV:1,desc:"1 mașină · notificări pe telefon + e-mail · documente standard"},
-  family:{name:"Family",price:"",pm:"5,99 lei/lună",py:"sau 49 lei/an",sms:true,biz:false,maxV:4,desc:"2–4 mașini · telefon + e-mail + SMS de urgență · documente standard"},
-  small:{name:"Small Business",price:"",pm:"49 lei/lună",py:"sau 490 lei/an",sms:true,biz:true,maxV:10,desc:"până la 10 mașini · tahograf, copie conformă, atestate · portofel șofer · SMS de urgență"},
-  business:{name:"Business",price:"",pm:"129 lei/lună",py:"sau 1.290 lei/an",sms:true,biz:true,maxV:999,desc:"peste 10 mașini, nelimitat · tot ce are Small Business"}
+  free:{name:"Free",price:"gratuit",pm:"0 lei",py:"",biz:false,maxV:1,desc:"1 mașină · notificări pe telefon + e-mail · documente standard"},
+  family:{name:"Family",price:"",pm:"5,99 lei/lună",py:"sau 49 lei/an",biz:false,maxV:4,desc:"2–4 mașini · notificări pe telefon + e-mail · documente standard"},
+  small:{name:"Small Business",price:"",pm:"49 lei/lună",py:"sau 490 lei/an",biz:true,maxV:10,desc:"până la 10 mașini · tahograf, copie conformă, atestate · portofel șofer"},
+  business:{name:"Business",price:"",pm:"129 lei/lună",py:"sau 1.290 lei/an",biz:true,maxV:999,desc:"peste 10 mașini, nelimitat · tot ce are Small Business"}
 };
 const TYPES = {autoturism:"Autoturism",duba:"Dubă",camion:"Camion"};
 
@@ -133,7 +133,7 @@ let ui = {tab:"termene", filter:null, vid:null};
 let storeMode = "loading"; // cloud | local | memory | loading
 let ref = null;
 
-function blank(){return {plan:"business",vehicles:[],settings:{thresholds:[30,14,7,2],smsUrgent:true,contact:"",phone:"",company:""}}}
+function blank(){return {plan:"business",vehicles:[],settings:{thresholds:[30,14,7,2],contact:"",company:""}}}
 function uid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $ = s => document.querySelector(s);
@@ -432,28 +432,26 @@ function kmBox(v){
 }
 const isKmDoc=t=>/Revizie|ulei|distribuție|anvelope/i.test(t);
 function firstOfMonth(d){return new Date(d.getFullYear(),d.getMonth(),1)}
-const smsDocs=()=>["RCA","ITP","Rovinietă"].concat(PLANS[state.plan].biz?["Verificare tahograf","Copie conformă / Licență transport"]:[]);
 function vAlerte(){
   const s=state.settings,p=PLANS[state.plan];
-  const smsOk=p.sms&&s.smsUrgent!==false;
   const t0=today(),end=addDays(t0,30),items=[];
   const co=s.company?s.company+": ":"";
-  const toFor=(v,critical)=>"Push + e-mail"+(v.driver&&v.driver.notify&&v.driver.name?" · și șoferul "+v.driver.name:"")+(critical&&smsOk?" · SMS dacă nu e văzut":"");
+  const toFor=v=>"Telefon + e-mail"+(v.driver&&v.driver.notify&&v.driver.name?" · și șoferul "+v.driver.name:"");
   for(const v of state.vehicles){
     for(const d of v.docs||[]){
       const e=pd(d.expiry);
-      if(e)for(const th of s.thresholds){const sd=addDays(e,-th);if(sd>=t0&&sd<=end)items.push({sd,to:toFor(v,th<=2&&smsDocs().includes(d.type)),why:`cu ${th} zile înainte`,
+      if(e)for(const th of s.thresholds){const sd=addDays(e,-th);if(sd>=t0&&sd<=end)items.push({sd,to:toFor(v),why:`cu ${th} zile înainte`,
         text:`⚠️ ${co}${d.type} pentru ${v.plate} expiră pe ${fmt(d.expiry)} (în ${th} ${th===1?"zi":"zile"}).${v.driver&&v.driver.name?"\nȘofer: "+v.driver.name:""}\n${isKmDoc(d.type)?"Programează-te la service.":"Reînnoiește la timp ca să eviți amenda."}`})}
       if(d.expiryKm){const st=status(d,v);if(st.estDate){
         let sd=firstOfMonth(st.estDate);if(sd<t0)sd=t0;
-        if(sd<=end)items.push({sd,to:toFor(v,false),why:"luna estimată după km",
+        if(sd<=end)items.push({sd,to:toFor(v),why:"luna estimată după km",
           text:`🔧 ${co}${d.type} la ${v.plate} e estimat(ă) ${st.estDate<=t0?"acum":"în "+monthLabel(st.estDate)} (acum ~${nf(kmInfo(v).est)} km, prag ${nf(d.expiryKm)} km).\nVerifică kilometrajul la bord și programează-te la service.`});
       }}
     }
   }
   const kmV=state.vehicles.filter(v=>(v.docs||[]).some(d=>d.expiryKm));
   if(kmV.length){const sd=new Date(t0.getFullYear(),t0.getMonth()+1,1);
-    items.push({sd,to:"Push + e-mail",why:"lunar, către administrator",text:`🔢 ${co}Actualizează kilometrajul pentru ${kmV.length} ${kmV.length===1?"vehicul":"vehicule"} (${kmV.slice(0,4).map(v=>v.plate).join(", ")}${kmV.length>4?"…":""}), ca să știm când vin uleiul, distribuția și revizia.`})}
+    items.push({sd,to:"Telefon + e-mail",why:"lunar, către administrator",text:`🔢 ${co}Actualizează kilometrajul pentru ${kmV.length} ${kmV.length===1?"vehicul":"vehicule"} (${kmV.slice(0,4).map(v=>v.plate).join(", ")}${kmV.length>4?"…":""}), ca să știm când vin uleiul, distribuția și revizia.`})}
   items.sort((a,b)=>a.sd-b.sd);
   return `<h2>Reguli de alertare</h2>
   <div class="card">
@@ -461,10 +459,7 @@ function vAlerte(){
     <div class="chips">${[60,30,14,7,3,2,1].map(n=>`<button class="chip ${s.thresholds.includes(n)?"on":""}" data-act="th" data-n="${n}">${n} ${n===1?"zi":"zile"}</button>`).join("")}</div>
     <div class="note" style="margin-top:14px">📲 <b>Notificări pe telefon + e-mail</b> — incluse, pentru toate alertele.</div>
     <label class="f"><span>E-mail pentru alerte (administrator / contabilă)</span><input type="email" id="contact" value="${esc(s.contact)}" placeholder="nume@firma.ro"></label>
-    ${p.sms?`<label class="row" style="gap:10px;margin:4px 0 10px;cursor:pointer"><input type="checkbox" id="smsUrgent" ${smsOk?"checked":""} style="width:20px;height:20px">
-      <span><b>SMS de urgență</b><br><span class="small muted">Doar pentru RCA, ITP, rovinietă${p.biz?", tahograf și copie conformă":""}, cu 2 zile înainte, și doar dacă alerta n-a fost văzută pe telefon sau e-mail (concediu, fără internet). Kilometrajul și restul merg doar pe telefon + e-mail.</span></span></label>
-      ${smsOk?`<label class="f"><span>Telefon pentru SMS de urgență</span><input type="tel" id="phone" value="${esc(s.phone)}" placeholder="07xx xxx xxx"></label>`:""}`
-    :`<div class="note">SMS-ul de urgență e disponibil pe Family, Small Business și Business.</div>`}
+    <div class="note">📱 <b>Pe iPhone</b> notificările vin doar dacă aplicația e adăugată pe ecranul principal (din Safari: Partajează ⬆️ → „Adaugă pe ecranul principal”) și ai apăsat „Permite”. Altfel primești doar e-mailul.</div>
     <div class="small muted">Șoferii primesc notificări doar dacă bifezi asta la vehicul (opțional).</div>
   </div>
   <h2>Ce se va trimite în următoarele 30 de zile (${items.length})</h2>
@@ -682,7 +677,6 @@ document.addEventListener("click",async e=>{
   }
 });
 document.addEventListener("change",async e=>{
-  if(e.target.id==="smsUrgent"){state.settings.smsUrgent=e.target.checked;save();render();return}
   if(e.target.id==="scanfile"&&e.target.files[0]){
     scanBlob=await shrink(e.target.files[0]);
     $("#scanprev").innerHTML=`<img class="preview" src="${URL.createObjectURL(scanBlob)}" alt="previzualizare">`;
@@ -691,7 +685,6 @@ document.addEventListener("change",async e=>{
 });
 document.addEventListener("input",e=>{
   if(e.target.id==="contact"){state.settings.contact=e.target.value;save()}
-  if(e.target.id==="phone"){state.settings.phone=e.target.value;save()}
   if(e.target.id==="company"){state.settings.company=e.target.value;save()}
 });
 document.addEventListener("submit",e=>{
