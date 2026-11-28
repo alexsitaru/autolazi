@@ -4,8 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0f3d5e">
-<title>AutoLaZi – Mașina ta, cu actele la zi!</title>
-<meta name="description" content="Alerte pentru RCA, ITP, rovinietă, CASCO, ulei, distribuție și revizie. Pentru familii și firme. Aplicație românească.">
+<title>AutoLaZi – alerte expirare RCA, ITP și rovinietă</title>
+<meta name="description" content="Primești alertă înainte să-ți expire RCA, ITP, rovinieta sau CASCO și când vine revizia. Notificări pe telefon și e-mail, pentru familii și firme.">
+<link rel="canonical" href="https://auto-la-zi.aplicatii-utile.ro/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ro_RO">
+<meta property="og:url" content="https://auto-la-zi.aplicatii-utile.ro/">
+<meta property="og:title" content="AutoLaZi – alerte expirare RCA, ITP și rovinietă">
+<meta property="og:description" content="Primești alertă înainte să-ți expire RCA, ITP, rovinieta sau CASCO și când vine revizia. Notificări pe telefon și e-mail, pentru familii și firme.">
+<meta property="og:image" content="https://auto-la-zi.aplicatii-utile.ro/icon-512.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
@@ -99,6 +106,15 @@ textarea{min-height:90px}
   <button class="plan-pill" data-act="tab" data-tab="setari" id="planPill">Plan</button>
 </div></header>
 <div class="wrap" id="app"></div>
+<section id="despre" style="max-width:640px;margin:28px auto 0;padding:16px;font-size:14px;line-height:1.5;color:#555">
+<h2 style="font-size:17px;margin:0 0 8px;color:#222">Alerte pentru actele și întreținerea mașinii</h2>
+<ul style="margin:0 0 12px;padding-left:18px"><li>Alerte înainte de expirarea RCA, ITP, rovinietei și CASCO</li><li>Memento pentru revizie, schimb de ulei și kit de distribuție, după kilometri</li><li>Notificări pe telefon și pe e-mail, fără SMS</li><li>Pentru firme: tahograf, licență de transport, atestat șofer, până la flote mari</li><li>Gratuit pentru o mașină</li></ul>
+</section>
+<footer id="suita" style="max-width:640px;margin:0 auto;padding:14px 16px 28px;font-size:13px;color:#777;text-align:center;border-top:1px solid #e5e5e5">
+Alte aplicații din suita <a href="https://aplicatii-utile.ro">Aplicații Utile</a>: <a href="https://vreaubilet.aplicatii-utile.ro/">VreauBilet – bilete pentru meciuri și spectacole</a> · <a href="https://caietul-meserias.aplicatii-utile.ro/">Caietul Meseriaș – oferte PDF pentru meseriași</a>
+</footer>
+<style>@media print{#despre,#suita{display:none!important}}</style>
+<script>try{if(localStorage.length>0)document.getElementById('despre').style.display='none'}catch(e){}</script>
 <button class="btn fab" data-act="scan" id="fab">📷 Scanează</button>
 <nav class="tabs"><div class="in">
   <button data-act="tab" data-tab="termene"><span class="ic">⏰</span>Termene</button>
